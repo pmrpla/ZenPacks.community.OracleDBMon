@@ -1,0 +1,39 @@
+Oracle Monitor ZenPack Installation Notes
+
+1. Requirements
+   - Zenoss >=3.0.3
+   - ZenPack SQL Data Source >=1.4 by Egor Puzanov
+   - Oracle Client >=10.2
+   - cx_Oracle >=5.0.4
+
+2. Installing
+2.1 Oracle Client
+   Install the Oracle client software, such as the Oracle Instant Client on your Zenoss server.
+
+      http://www.oracle.com/technetwork/database/features/instant-client/index-097480.html
+
+   If you have an Oracle Database in the same server, the Oracle client is already installed.
+
+2.2 cx_Oracle
+   Download the cx_Oracle Python extension module source.
+
+      http://cx-oracle.sourceforge.net/
+
+   Extract it to a directory and using the zenoss user run:
+
+      /opt/zenoss/bin/python setup.py install --home /opt/zenoss
+
+   This will install the extension module inside Zenoss. You might need to repeat this step after a Zenoss upgrade.
+
+2.3 Configure
+   You'll need to add the following variables to the zenoss user (i.e. in .bashrc)
+
+      ORACLE_HOME = (path to the Oracle Client Home)
+      LD_LIBRARY_PATH = $ORACLE_HOME/lib
+
+   Restart Zenoss.
+
+2.4 ZenPack
+   Download and install the Oracle Monitor ZenPack. Don't forget to install the SQL Data Source ZenPack first.
+
+Check the README.txt for usage notes.
