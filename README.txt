@@ -1,18 +1,21 @@
-Oracle Monitor ZenPack Usage Notes
+            * Oracle Monitor ZenPack Usage Notes *
 
 Check INSTALL.txt for installation notes.
 
 1. Features
-
+   To be completed.
 
 . Using
-   To use just add the ZenPack to your device and...
-
+   After installing the ZenPack according to instructions bind the Monitoring Template to your device and in the device configuration properties, fill out:
+   - zOracleUsername - Your Oracle DB monitoring username with SELECT_CATALOG role (default dbsnmp).
+   - zOraclePassword - Password for above.
+   - zOracleCnxString - The connection string as configured on your tnsnames.ora.
 
 . Known Problems
+   To be completed.
 
 . Contact
-   https://github.com/pmrpla/ZenPack-Oracle-Monitor
+   http://github.com/pmrpla/ZenPack-Oracle-Monitor
 
 . License
     This program is free software: you can redistribute it and/or modify

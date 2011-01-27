@@ -1,23 +1,33 @@
 Oracle Monitor ZenPack Installation Notes
 
 1. Requirements
-   - Zenoss >=3.0.3
+   - Zenoss Core >=3.0.3
    - ZenPack SQL Data Source >=1.4 by Egor Puzanov
    - Oracle Client >=10.2
    - cx_Oracle >=5.0.4
 
 2. Installing
 2.1 Oracle Client
-   Install the Oracle client software, such as the Oracle Instant Client on your Zenoss server.
+   Download and install the Oracle client software, the Oracle Instant Client will do, but you'll need the basic and the SDK.
 
       http://www.oracle.com/technetwork/database/features/instant-client/index-097480.html
+      
+      e.g.:
+      rpm -Uvh oracle-instantclient11.2-basic-11.2.0.2.0.x86_64.rpm
+      rpm -Uvh oracle-instantclient11.2-devel-11.2.0.2.0.x86_64.rpm
 
-   If you have an Oracle Database in the same server, the Oracle client is already installed.
+   If you have an Oracle Database in the same server as Zenoss Core, the Oracle client is already installed.
+
+   You'll need to add the following variables to the zenoss user (i.e. in .bashrc):
+      export ORACLE_HOME=(path to the Oracle Client Home)
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib
 
 2.2 cx_Oracle
-   Download the cx_Oracle Python extension module source.
+   Download the cx_Oracle Python extension module source (source code only).
 
       http://cx-oracle.sourceforge.net/
+      
+      e.g. http://prdownloads.sourceforge.net/cx-oracle/cx_Oracle-5.0.4.tar.gz?download
 
    Extract it to a directory and using the zenoss user run:
 
@@ -25,15 +35,9 @@ Oracle Monitor ZenPack Installation Notes
 
    This will install the extension module inside Zenoss. You might need to repeat this step after a Zenoss upgrade.
 
-2.3 Configure
-   You'll need to add the following variables to the zenoss user (i.e. in .bashrc)
-
-      ORACLE_HOME = (path to the Oracle Client Home)
-      LD_LIBRARY_PATH = $ORACLE_HOME/lib
+2.3 ZenPack
+   Download and install the Oracle Monitor ZenPack. Don't forget to install the SQL Data Source ZenPack first.
 
    Restart Zenoss.
-
-2.4 ZenPack
-   Download and install the Oracle Monitor ZenPack. Don't forget to install the SQL Data Source ZenPack first.
 
 Check the README.txt for usage notes.

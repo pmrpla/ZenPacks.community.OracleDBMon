@@ -14,7 +14,7 @@ class ZenPack(ZenPackBase):
     """
     packZProperties = [
             ('zOracleUsername', 'dbsnmp', 'string'),
-            ('zOraclePassword', '', 'string'),
-            ('zOracleCnxString', '', 'string'),
+            ('zOraclePassword', '', 'password'),
+            ('zOracleCnxString', '', 'password'),
             ]
 
