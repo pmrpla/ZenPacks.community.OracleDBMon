@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <objects>
-<!-- ('', 'zport', 'dmd', 'Devices', 'rrdTemplates', 'OracleMonitor') -->
-<object id='/zport/dmd/Devices/rrdTemplates/OracleMonitor' module='Products.ZenModel.RRDTemplate' class='RRDTemplate'>
+<!-- ('', 'zport', 'dmd', 'Devices', 'rrdTemplates', 'OracleDBMon') -->
+<object id='/zport/dmd/Devices/rrdTemplates/OracleDBMon' module='Products.ZenModel.RRDTemplate' class='RRDTemplate'>
 <property type="string" id="targetPythonClass" mode="w" >
 Products.ZenModel.Device
 </property>
 <tomanycont id='datasources'>
-<object id='OracleEfficPerc' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
+<object id='OracleDBEfficPerc' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
 <property select_variable="sourcetypes" type="selection" id="sourcetype" mode="w" >
 SQL
 </property>
@@ -20,7 +20,7 @@ True
 300
 </property>
 <property type="string" id="cs" mode="w" >
-cx_Oracle, user='${here/zOracleUsername}', password='${here/zOraclePassword}', dsn='${here/zOracleCnxString}'
+cx_Oracle, user='${here/zOracleDBUsername}', password='${here/zOracleDBPassword}', dsn='${here/zOracleDBCnxString}'
 </property>
 <property type="string" id="sql" mode="w" >
 SELECT *
@@ -105,7 +105,7 @@ True
 </object>
 </tomanycont>
 </object>
-<object id='OracleRESOURCE' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
+<object id='OracleDBResource' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
 <property select_variable="sourcetypes" type="selection" id="sourcetype" mode="w" >
 SQL
 </property>
@@ -119,7 +119,7 @@ True
 300
 </property>
 <property type="string" id="cs" mode="w" >
-cx_Oracle, user='${here/zOracleUsername}', password='${here/zOraclePassword}', dsn='${here/zOracleCnxString}'
+cx_Oracle, user='${here/zOracleDBUsername}', password='${here/zOracleDBPassword}', dsn='${here/zOracleDBCnxString}'
 </property>
 <property type="string" id="sql" mode="w" >
 SELECT a.current_utilization "CurrProcesses",
@@ -206,7 +206,7 @@ True
 </object>
 </tomanycont>
 </object>
-<object id='OracleSGAINFO' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
+<object id='OracleDBSGAInfo' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
 <property select_variable="sourcetypes" type="selection" id="sourcetype" mode="w" >
 SQL
 </property>
@@ -220,7 +220,7 @@ True
 300
 </property>
 <property type="string" id="cs" mode="w" >
-cx_Oracle, user='${here/zOracleUsername}', password='${here/zOraclePassword}', dsn='${here/zOracleCnxString}'
+cx_Oracle, user='${here/zOracleDBUsername}', password='${here/zOracleDBPassword}', dsn='${here/zOracleDBCnxString}'
 </property>
 <property type="string" id="sql" mode="w" >
 SELECT
@@ -340,7 +340,7 @@ True
 </object>
 </tomanycont>
 </object>
-<object id='OracleSYSSTAT' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
+<object id='OracleDBSysStat' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
 <property select_variable="sourcetypes" type="selection" id="sourcetype" mode="w" >
 SQL
 </property>
@@ -354,7 +354,7 @@ True
 300
 </property>
 <property type="string" id="cs" mode="w" >
-cx_Oracle, user='${here/zOracleUsername}', password='${here/zOraclePassword}', dsn='${here/zOracleCnxString}'
+cx_Oracle, user='${here/zOracleDBUsername}', password='${here/zOracleDBPassword}', dsn='${here/zOracleDBCnxString}'
 </property>
 <property type="string" id="sql" mode="w" >
 SELECT
@@ -370,7 +370,9 @@ SELECT
    j.value "BytesSentDBLink",
    k.value "BytesReceivedDBLink",
    l.value "SessionCPU",
-   m.value "Executions"
+   m.value "Executions",
+   n.value*TO_NUMBER(vp.value) "BytesSentGC",
+   o.value*TO_NUMBER(vp.value) "BytesReceivedGC"
 FROM v$$sysstat a,
    v$$sysstat b,
    v$$sysstat c,
@@ -383,7 +385,10 @@ FROM v$$sysstat a,
    v$$sysstat j,
    v$$sysstat k,
    v$$sysstat l,
-   v$$sysstat m
+   v$$sysstat m,
+   v$$sysstat n,
+   v$$sysstat o,
+   v$$parameter vp
 WHERE a.name='logons cumulative'
    AND b.name='opened cursors cumulative'
    AND c.name='user commits'
@@ -396,7 +401,10 @@ WHERE a.name='logons cumulative'
    AND j.name='bytes sent via SQL*Net to dblink'
    AND k.name='bytes received via SQL*Net from dblink'
    AND l.name='CPU used by this session'
-   AND m.name='execute count';
+   AND m.name='execute count'
+   AND n.name='gc current blocks received'
+   AND o.name='gc current blocks served'
+   AND vp.name='db_block_size';
 </property>
 <tomanycont id='datapoints'>
 <object id='BytesReceivedClient' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
@@ -421,6 +429,17 @@ True
 0
 </property>
 </object>
+<object id='BytesReceivedGC' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
 <object id='BytesSentClient' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
 <property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
 DERIVE
@@ -433,6 +452,17 @@ True
 </property>
 </object>
 <object id='BytesSentDBLink' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='BytesSentGC' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
 <property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
 DERIVE
 </property>
@@ -548,17 +578,206 @@ True
 </object>
 </tomanycont>
 </object>
+<object id='OracleDBSysWaitClass' module='ZenPacks.community.SQLDataSource.datasources.SQLDataSource' class='SQLDataSource'>
+<property select_variable="sourcetypes" type="selection" id="sourcetype" mode="w" >
+SQL
+</property>
+<property type="boolean" id="enabled" mode="w" >
+True
+</property>
+<property type="int" id="severity" mode="w" >
+3
+</property>
+<property type="int" id="cycletime" mode="w" >
+300
+</property>
+<property type="string" id="cs" mode="w" >
+cx_Oracle, user='${here/zOracleDBUsername}', password='${here/zOracleDBPassword}', dsn='${here/zOracleDBCnxString}'
+</property>
+<property type="string" id="sql" mode="w" >
+SELECT NVL(a.time_waited,0) "WaitOther",
+   NVL(b.time_waited,0) "WaitApp",
+   NVL(c.time_waited,0) "WaitConf",
+   NVL(d.time_waited,0) "WaitConc",
+   NVL(e.time_waited,0) "WaitCommit",
+   NVL(f.time_waited,0) "WaitNet",
+   NVL(g.time_waited,0) "WaitUserIO",
+   NVL(h.time_waited,0) "WaitSysIO",
+   NVL(i.time_waited,0) "WaitAdmin",
+   NVL(j.time_waited,0) "WaitCluster",
+   NVL(k.time_waited,0) "WaitQueue",
+   NVL(l.time_waited,0) "WaitSched"   
+FROM v$$system_wait_class a, (SELECT 'Other' wc FROM dual) ax,
+   v$$system_wait_class b, (SELECT 'Application' wc FROM dual) bx,
+   v$$system_wait_class c, (SELECT 'Configuration' wc FROM dual) cx,
+   v$$system_wait_class d, (SELECT 'Concurrency' wc FROM dual) dx,
+   v$$system_wait_class e, (SELECT 'Commit' wc FROM dual) ex,
+   v$$system_wait_class f, (SELECT 'Network' wc FROM dual) fx,
+   v$$system_wait_class g, (SELECT 'User I/O' wc FROM dual) gx,
+   v$$system_wait_class h, (SELECT 'System I/O' wc FROM dual) hx,
+   v$$system_wait_class i, (SELECT 'Administrative' wc FROM dual) ix,
+   v$$system_wait_class j, (SELECT 'Cluster' wc FROM dual) jx,
+   v$$system_wait_class k, (SELECT 'Queue' wc FROM dual) kx,
+   v$$system_wait_class l, (SELECT 'Scheduler' wc FROM dual) lx
+WHERE a.wait_class(+)=ax.wc
+   AND b.wait_class(+)=bx.wc
+   AND c.wait_class(+)=cx.wc
+   AND d.wait_class(+)=dx.wc
+   AND e.wait_class(+)=ex.wc
+   AND f.wait_class(+)=fx.wc
+   AND g.wait_class(+)=gx.wc
+   AND h.wait_class(+)=hx.wc
+   AND i.wait_class(+)=ix.wc
+   AND j.wait_class(+)=jx.wc
+   AND k.wait_class(+)=kx.wc
+   AND l.wait_class(+)=lx.wc;
+</property>
+<tomanycont id='datapoints'>
+<object id='WaitAdmin' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitApp' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitCluster' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitCommit' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitConc' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitConf' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitNet' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitOther' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitQueue' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitSched' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitSysIO' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+<object id='WaitUserIO' module='Products.ZenModel.RRDDataPoint' class='RRDDataPoint'>
+<property select_variable="rrdtypes" type="selection" id="rrdtype" mode="w" >
+DERIVE
+</property>
+<property type="boolean" id="isrow" mode="w" >
+True
+</property>
+<property type="string" id="rrdmin" mode="w" >
+0
+</property>
+</object>
+</tomanycont>
+</object>
 </tomanycont>
 <tomanycont id='thresholds'>
-<object id='MaxProcessesT1' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
+<object id='MaxProcesses90p' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
 <property label="DataPoints" type="lines" id="dsnames" mode="w" >
-['OracleRESOURCE_CurrProcesses']
+['OracleDBResource_CurrProcesses']
 </property>
 <property label="Enabled" type="boolean" id="enabled" mode="w" >
 True
 </property>
 <property type="string" id="maxval" mode="w" >
-(here.getRRDValue('MaxProcesses') * .9)
+(here.getRRDValue('MaxProcesses') or 100) * .9
 </property>
 <property type="string" id="eventClass" mode="w" >
 /Oracle/Instance/Resource
@@ -570,64 +789,81 @@ True
 0
 </property>
 </object>
-<object id='MaxProcessesT2' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
+<object id='MaxProcessesTop' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
 <property label="DataPoints" type="lines" id="dsnames" mode="w" >
-['OracleRESOURCE_CurrProcesses']
+['OracleDBResource_CurrProcesses']
+</property>
+<property label="Enabled" type="boolean" id="enabled" mode="w" >
+True
+</property>
+<property type="string" id="maxval" mode="w" >
+here.getRRDValue('MaxProcesses')
+</property>
+<property type="string" id="eventClass" mode="w" >
+/Oracle/Instance/Resource
+</property>
+<property type="int" id="severity" mode="w" >
+4
+</property>
+<property type="int" id="escalateCount" mode="w" >
+0
+</property>
+</object>
+<object id='MaxSessions90p' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
+<property label="DataPoints" type="lines" id="dsnames" mode="w" >
+['OracleDBResource_CurrSessions']
+</property>
+<property label="Enabled" type="boolean" id="enabled" mode="w" >
+True
+</property>
+<property type="string" id="maxval" mode="w" >
+(here.getRRDValue('MaxSessions') or 100) * .9
+</property>
+<property type="string" id="eventClass" mode="w" >
+/Oracle/Instance/Resource
+</property>
+<property type="int" id="severity" mode="w" >
+3
+</property>
+<property type="int" id="escalateCount" mode="w" >
+0
+</property>
+</object>
+<object id='MaxSessionsTop' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
+<property label="DataPoints" type="lines" id="dsnames" mode="w" >
+['OracleDBResource_CurrSessions']
+</property>
+<property label="Enabled" type="boolean" id="enabled" mode="w" >
+True
+</property>
+<property type="string" id="maxval" mode="w" >
+here.getRRDValue('MaxSessions')
+</property>
+<property type="string" id="eventClass" mode="w" >
+/Oracle/Instance/Resource
+</property>
+<property type="int" id="severity" mode="w" >
+4
+</property>
+<property type="int" id="escalateCount" mode="w" >
+0
+</property>
+</object>
+<object id='MinDBCacheHR70p' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
+<property label="DataPoints" type="lines" id="dsnames" mode="w" >
+['OracleDBEfficPerc_DBCacheHR']
 </property>
 <property label="Enabled" type="boolean" id="enabled" mode="w" >
 True
 </property>
 <property type="string" id="minval" mode="w" >
-(here.getRRDValue('MaxProcesses'))
-</property>
-<property type="string" id="maxval" mode="w" >
-100
+70
 </property>
 <property type="string" id="eventClass" mode="w" >
-/Oracle/Instance/Resource
-</property>
-<property type="int" id="severity" mode="w" >
-4
-</property>
-<property type="int" id="escalateCount" mode="w" >
-0
-</property>
-</object>
-<object id='MaxSessionsT1' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
-<property label="DataPoints" type="lines" id="dsnames" mode="w" >
-['OracleRESOURCE_CurrSessions']
-</property>
-<property label="Enabled" type="boolean" id="enabled" mode="w" >
-True
-</property>
-<property type="string" id="maxval" mode="w" >
-(here.getRRDValue('MaxSessions') * .9)
-</property>
-<property type="string" id="eventClass" mode="w" >
-/Oracle/Instance/Resource
+/Oracle/Instance/SGA
 </property>
 <property type="int" id="severity" mode="w" >
 3
-</property>
-<property type="int" id="escalateCount" mode="w" >
-0
-</property>
-</object>
-<object id='MaxSessionsT2' module='Products.ZenModel.MinMaxThreshold' class='MinMaxThreshold'>
-<property label="DataPoints" type="lines" id="dsnames" mode="w" >
-['OracleRESOURCE_CurrSessions']
-</property>
-<property label="Enabled" type="boolean" id="enabled" mode="w" >
-True
-</property>
-<property type="string" id="maxval" mode="w" >
-(here.getRRDValue('MaxSessions'))
-</property>
-<property type="string" id="eventClass" mode="w" >
-/Oracle/Instance/Resource
-</property>
-<property type="int" id="severity" mode="w" >
-4
 </property>
 <property type="int" id="escalateCount" mode="w" >
 0
@@ -635,7 +871,7 @@ True
 </object>
 </tomanycont>
 <tomanycont id='graphDefs'>
-<object id='Oracle Efficiency' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<object id='Oracle Instance Efficiency' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
 <property type="int" id="height" mode="w" >
 100
 </property>
@@ -661,7 +897,7 @@ False
 True
 </property>
 <property type="long" id="sequence" mode="w" >
-4
+6
 </property>
 <tomanycont id='graphPoints'>
 <object id='DBCacheHR' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
@@ -675,7 +911,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%6.2lf%%
+%3.0lf%%
 </property>
 <property type="string" id="legend" mode="w" >
 DB Cache HR
@@ -684,7 +920,7 @@ DB Cache HR
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleEfficPerc_DBCacheHR
+OracleDBEfficPerc_DBCacheHR
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -704,7 +940,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%6.2lf%%
+%3.0lf%%
 </property>
 <property type="string" id="legend" mode="w" >
 Execute to Parse HR
@@ -713,7 +949,7 @@ Execute to Parse HR
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleEfficPerc_ExecuteParseHR
+OracleDBEfficPerc_ExecuteParseHR
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -733,7 +969,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%6.2lf%%
+%3.0lf%%
 </property>
 <property type="string" id="legend" mode="w" >
 Latches HR
@@ -742,7 +978,7 @@ Latches HR
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleEfficPerc_LatchesHR
+OracleDBEfficPerc_LatchesHR
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -762,7 +998,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%6.2lf%%
+%3.0lf%%
 </property>
 <property type="string" id="legend" mode="w" >
 Library Cache HR
@@ -771,7 +1007,7 @@ Library Cache HR
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleEfficPerc_LibraryCacheHR
+OracleDBEfficPerc_LibraryCacheHR
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -791,7 +1027,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%6.2lf%%
+%3.0lf%%
 </property>
 <property type="string" id="legend" mode="w" >
 Sort In Memory
@@ -800,7 +1036,7 @@ Sort In Memory
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleEfficPerc_SortInMemory
+OracleDBEfficPerc_SortInMemory
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -808,7 +1044,7 @@ AVERAGE
 </object>
 </tomanycont>
 </object>
-<object id='Oracle IO' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<object id='Oracle Instance IO' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
 <property type="int" id="height" mode="w" >
 100
 </property>
@@ -834,7 +1070,7 @@ False
 True
 </property>
 <property type="long" id="sequence" mode="w" >
-1
+2
 </property>
 <tomanycont id='graphPoints'>
 <object id='Logical Reads' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
@@ -860,7 +1096,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_LogicalReads
+OracleDBSysStat_LogicalReads
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -892,7 +1128,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_PhysicalReads
+OracleDBSysStat_PhysicalReads
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -924,7 +1160,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_PhysicalWrites
+OracleDBSysStat_PhysicalWrites
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -932,7 +1168,7 @@ AVERAGE
 </object>
 </tomanycont>
 </object>
-<object id='Oracle Load' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<object id='Oracle Instance Load' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
 <property type="int" id="height" mode="w" >
 100
 </property>
@@ -981,7 +1217,7 @@ Commits
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_Commits
+OracleDBSysStat_Commits
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1013,7 +1249,7 @@ Executions
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_Executions
+OracleDBSysStat_Executions
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1042,7 +1278,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_Logons
+OracleDBSysStat_Logons
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1074,7 +1310,7 @@ Open Cursors
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_OpenCursors
+OracleDBSysStat_OpenCursors
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1106,7 +1342,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_Parses
+OracleDBSysStat_Parses
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1138,7 +1374,7 @@ Session CPU
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_SessionCPU
+OracleDBSysStat_SessionCPU
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1146,7 +1382,7 @@ AVERAGE
 </object>
 </tomanycont>
 </object>
-<object id='Oracle Network' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<object id='Oracle Instance Network' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
 <property type="int" id="height" mode="w" >
 100
 </property>
@@ -1160,7 +1396,7 @@ bytes
 False
 </property>
 <property type="boolean" id="base" mode="w" >
-False
+True
 </property>
 <property type="int" id="miny" mode="w" >
 -1
@@ -1172,10 +1408,10 @@ False
 True
 </property>
 <property type="long" id="sequence" mode="w" >
-2
+3
 </property>
 <tomanycont id='graphPoints'>
-<object id='ReceivedClient' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<object id='Received from Client' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
 <property type="long" id="sequence" mode="w" >
 1
 </property>
@@ -1195,19 +1431,19 @@ False
 %5.2lf%s
 </property>
 <property type="string" id="legend" mode="w" >
-Received from Client
+${graphPoint/id}
 </property>
 <property type="long" id="limit" mode="w" >
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_BytesReceivedClient
+OracleDBSysStat_BytesReceivedClient
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
 </property>
 </object>
-<object id='ReceivedDBLink' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<object id='Received from DBLink' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
 <property type="long" id="sequence" mode="w" >
 3
 </property>
@@ -1227,19 +1463,48 @@ False
 %5.2lf%s
 </property>
 <property type="string" id="legend" mode="w" >
-Received from DBLink
+${graphPoint/id}
 </property>
 <property type="long" id="limit" mode="w" >
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_BytesReceivedDBLink
+OracleDBSysStat_BytesReceivedDBLink
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
 </property>
 </object>
-<object id='SentClient' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<object id='Received from GC' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+5
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+LINE
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+False
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysStat_BytesReceivedGC
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Sent to Client' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
 <property type="string" id="color" mode="w" >
 FF3300
 </property>
@@ -1256,19 +1521,19 @@ False
 %5.2lf%s
 </property>
 <property type="string" id="legend" mode="w" >
-Sent to Client
+${graphPoint/id}
 </property>
 <property type="long" id="limit" mode="w" >
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_BytesSentClient
+OracleDBSysStat_BytesSentClient
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
 </property>
 </object>
-<object id='SentDBLink' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<object id='Sent to DBLink' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
 <property type="long" id="sequence" mode="w" >
 2
 </property>
@@ -1288,13 +1553,42 @@ False
 %5.2lf%s
 </property>
 <property type="string" id="legend" mode="w" >
-Sent to DBLink
+${graphPoint/id}
 </property>
 <property type="long" id="limit" mode="w" >
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSYSSTAT_BytesSentDBLink
+OracleDBSysStat_BytesSentDBLink
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Sent to GC' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+4
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+LINE
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+False
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysStat_BytesSentGC
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1302,7 +1596,7 @@ AVERAGE
 </object>
 </tomanycont>
 </object>
-<object id='Oracle Resources' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<object id='Oracle Instance Resources' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
 <property type="int" id="height" mode="w" >
 100
 </property>
@@ -1354,7 +1648,7 @@ Parallel Servers
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleRESOURCE_CurrParServers
+OracleDBResource_CurrParServers
 </property>
 <property type="string" id="cFunc" mode="w" >
 MAX
@@ -1386,7 +1680,7 @@ Processes
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleRESOURCE_CurrProcesses
+OracleDBResource_CurrProcesses
 </property>
 <property type="string" id="cFunc" mode="w" >
 MAX
@@ -1418,7 +1712,7 @@ Sessions
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleRESOURCE_CurrSessions
+OracleDBResource_CurrSessions
 </property>
 <property type="string" id="cFunc" mode="w" >
 MAX
@@ -1450,7 +1744,7 @@ Shared Servers
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleRESOURCE_CurrShaServers
+OracleDBResource_CurrShaServers
 </property>
 <property type="string" id="cFunc" mode="w" >
 MAX
@@ -1483,7 +1777,7 @@ Sessions Max.
 </object>
 </tomanycont>
 </object>
-<object id='Oracle SGA' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<object id='Oracle Instance SGA' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
 <property type="int" id="height" mode="w" >
 100
 </property>
@@ -1497,7 +1791,7 @@ bytes
 False
 </property>
 <property type="boolean" id="base" mode="w" >
-False
+True
 </property>
 <property type="int" id="miny" mode="w" >
 -1
@@ -1509,7 +1803,7 @@ False
 True
 </property>
 <property type="long" id="sequence" mode="w" >
-3
+4
 </property>
 <tomanycont id='graphPoints'>
 <object id='Buffer Cache' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
@@ -1529,7 +1823,7 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1538,7 +1832,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_BufferCache
+OracleDBSGAInfo_BufferCache
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1558,7 +1852,7 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1567,7 +1861,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_FixedSGA
+OracleDBSGAInfo_FixedSGA
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1590,7 +1884,7 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1599,7 +1893,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_FreeSGA
+OracleDBSGAInfo_FreeSGA
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1619,10 +1913,10 @@ AREA
 1
 </property>
 <property type="boolean" id="stacked" mode="w" >
-False
+True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1631,7 +1925,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_JavaPool
+OracleDBSGAInfo_JavaPool
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1654,7 +1948,7 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1663,7 +1957,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_LargePool
+OracleDBSGAInfo_LargePool
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1686,7 +1980,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1695,13 +1989,13 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_MaximumSGA
+OracleDBSGAInfo_MaximumSGA
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
 </property>
 </object>
-<object id='RedoBuffers' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<object id='Redo Buffers' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
 <property type="long" id="sequence" mode="w" >
 1
 </property>
@@ -1718,7 +2012,7 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1727,7 +2021,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_RedoBuffers
+OracleDBSGAInfo_RedoBuffers
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1750,7 +2044,7 @@ LINE
 False
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 SGA Target
@@ -1759,7 +2053,7 @@ SGA Target
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_SGATarget
+OracleDBSGAInfo_SGATarget
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1782,7 +2076,7 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
-%5.2lf%s
+%5.1lf%s
 </property>
 <property type="string" id="legend" mode="w" >
 ${graphPoint/id}
@@ -1791,7 +2085,7 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_SharedPool
+OracleDBSGAInfo_SharedPool
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE
@@ -1814,6 +2108,63 @@ AREA
 True
 </property>
 <property type="string" id="format" mode="w" >
+%5.1lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSGAInfo_StreamsPool
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+</tomanycont>
+</object>
+<object id='Oracle Instance Waits' module='Products.ZenModel.GraphDefinition' class='GraphDefinition'>
+<property type="int" id="height" mode="w" >
+100
+</property>
+<property type="int" id="width" mode="w" >
+500
+</property>
+<property type="string" id="units" mode="w" >
+centiseconds
+</property>
+<property type="boolean" id="log" mode="w" >
+False
+</property>
+<property type="boolean" id="base" mode="w" >
+False
+</property>
+<property type="int" id="miny" mode="w" >
+-1
+</property>
+<property type="int" id="maxy" mode="w" >
+-1
+</property>
+<property type="boolean" id="hasSummary" mode="w" >
+True
+</property>
+<property type="long" id="sequence" mode="w" >
+1
+</property>
+<tomanycont id='graphPoints'>
+<object id='Administrative' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
 %5.2lf%s
 </property>
 <property type="string" id="legend" mode="w" >
@@ -1823,7 +2174,326 @@ ${graphPoint/id}
 -1
 </property>
 <property type="string" id="dpName" mode="w" >
-OracleSGAINFO_StreamsPool
+OracleDBSysWaitClass_WaitAdmin
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Application' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+1
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitApp
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Cluster' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+2
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitCluster
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Commit' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+3
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitCommit
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Concurrency' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+4
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitConc
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Configuration' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+5
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitConf
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Network' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+6
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitNet
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Other' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+7
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitOther
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Queue' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+10
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitQueue
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='Scheduler' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+11
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitSched
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='System IO' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+8
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitSysIO
+</property>
+<property type="string" id="cFunc" mode="w" >
+AVERAGE
+</property>
+</object>
+<object id='User IO' module='Products.ZenModel.DataPointGraphPoint' class='DataPointGraphPoint'>
+<property type="long" id="sequence" mode="w" >
+9
+</property>
+<property select_variable="lineTypes" type="selection" id="lineType" mode="w" >
+AREA
+</property>
+<property type="long" id="lineWidth" mode="w" >
+1
+</property>
+<property type="boolean" id="stacked" mode="w" >
+True
+</property>
+<property type="string" id="format" mode="w" >
+%5.2lf%s
+</property>
+<property type="string" id="legend" mode="w" >
+${graphPoint/id}
+</property>
+<property type="long" id="limit" mode="w" >
+-1
+</property>
+<property type="string" id="dpName" mode="w" >
+OracleDBSysWaitClass_WaitUserIO
 </property>
 <property type="string" id="cFunc" mode="w" >
 AVERAGE

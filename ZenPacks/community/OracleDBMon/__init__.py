@@ -10,11 +10,11 @@ if os.path.isdir(skinsDir):
 from Products.ZenModel.ZenPack import ZenPackBase
 
 class ZenPack(ZenPackBase):
-    """ OracleMonitor loader
+    """ OracleDBMon loader
     """
     packZProperties = [
-            ('zOracleUsername', 'dbsnmp', 'string'),
-            ('zOraclePassword', '', 'password'),
-            ('zOracleCnxString', '', 'password'),
+            ('zOracleDBUsername', 'dbsnmp', 'string'),
+            ('zOracleDBPassword', '', 'password'),
+            ('zOracleDBCnxString', '', 'string'),
             ]
 

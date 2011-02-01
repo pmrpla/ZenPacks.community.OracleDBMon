@@ -2,15 +2,15 @@
 # These variables are overwritten by Zenoss when the ZenPack is exported
 # or saved.  Do not modify them directly here.
 # NB: PACKAGES is deprecated
-NAME = ''
-VERSION = '1.0'
-AUTHOR = ''
-LICENSE = ''
-NAMESPACE_PACKAGES = []
-PACKAGES = []
-INSTALL_REQUIRES = []
-COMPAT_ZENOSS_VERS = ''
-PREV_ZENPACK_NAME = ''
+NAME = "ZenPacks.community.OracleDBMon"
+VERSION = "0.5"
+AUTHOR = "Pedro Almeida"
+LICENSE = ""
+NAMESPACE_PACKAGES = ['ZenPacks', 'ZenPacks.community']
+PACKAGES = ['ZenPacks', 'ZenPacks.community', 'ZenPacks.community.OracleDBMon']
+INSTALL_REQUIRES = ['ZenPacks.community.SQLDataSource']
+COMPAT_ZENOSS_VERS = ""
+PREV_ZENPACK_NAME = ""
 # STOP_REPLACEMENTS
 ################################
 # Zenoss will not overwrite any changes you make below here.

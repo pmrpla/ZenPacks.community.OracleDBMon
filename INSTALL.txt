@@ -1,4 +1,4 @@
-Oracle Monitor ZenPack Installation Notes
+            * Oracle DB Monitor ZenPack Installation Notes *
 
 1. Requirements
    - Zenoss Core >=3.0.3
@@ -36,7 +36,7 @@ Oracle Monitor ZenPack Installation Notes
    This will install the extension module inside Zenoss. You might need to repeat this step after a Zenoss upgrade.
 
 2.3 ZenPack
-   Download and install the Oracle Monitor ZenPack. Don't forget to install the SQL Data Source ZenPack first.
+   Download and install the Oracle DB Monitor ZenPack. Don't forget to install the SQL Data Source ZenPack first.
 
    Restart Zenoss.
 
